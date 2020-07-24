@@ -1,0 +1,6 @@
+# DISABLE JOURNALD
+
+### UPDATE CONFIG
+```bash
+echo "Storage=none" >> /etc/systemd/journald.conf
+```
