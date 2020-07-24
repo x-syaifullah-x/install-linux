@@ -1,0 +1,79 @@
+#! /bin/bash
+
+#alias libreoffice='libreoffice7.3 -env:UserInstallation=file:////tmp/libreoffice'
+
+### VNCSERVER START
+# alias vncserver_for_mi_8_start="vncserver :0 -name xxx@Lonovo-B490 -geometry 710x820 -dpi 105"
+# alias vncserver_for_mi_8_stop="vncserver -kill :0"
+### VNCSERVER END
+
+### APT START
+alias apt_purge="sudo apt purge $(dpkg -l | awk '/^rc/ { print $2 }')"
+### APT AND
+
+### BATTERY STATE START
+alias battery_stat="upower              -i /org/freedesktop/UPower/devices/battery_BAT0"
+alias battery_stat_watch="watch upower  -i /org/freedesktop/UPower/devices/battery_BAT0"
+### BATTERY STATE END
+
+### POWER PROFILE START
+alias power_profile_performance="echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2> /dev/null"
+alias power_profile_powersave="echo powersave     | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2> /dev/null"
+alias power_profile_schedutil="echo schedutil     | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2> /dev/null"
+### POWER PROFILE END
+
+### SET ONLINE CPU START
+function _set_online_cpu() {
+	_ARG_1=$(expr ${1:-0} - 1)
+ 	_INDEX=0
+	for i in /sys/devices/system/cpu/cpu*/online; do
+		if [ $_INDEX -lt $_ARG_1 ]; then
+			echo 1 | sudo tee $i 2>/dev/null
+		else
+			echo 0 | sudo tee $i 2>/dev/null
+		fi
+		_INDEX=$(expr $_INDEX + 1)
+	done
+}
+alias set_online_cpu="_set_online_cpu $@"
+### SET ONLINE CPU END
+
+alias cpu_MHz_watch="watch -d -n1 'grep MHz /proc/cpuinfo'"
+
+alias temperature="cat              /sys/class/thermal/thermal_zone*/temp"
+alias temperature_watch="watch cat  /sys/class/thermal/thermal_zone*/temp"
+
+# alias clear_zsh="printf '\033c'"
+
+#alias tmux_clear='clear && tmux clear'
+
+# with gpu nvidia = -gpu swiftshader_indirect
+# alias run_avd="$ANDROID_SDK_ROOT/emulator/emulator -avd Television_1080p_API_29 -nocache -no-boot-anim -accel on -memory 4096 -qemu -enable-kvm"
+
+#alias vim="vim -i /tmp/.viminfo"
+
+alias adb="$ANDROID_HOME/platform-tools/adb"
+alias fastboot="sudo ${ANDROID_HOME}/platform-tools/fastboot"
+
+alias clear_ram="sudo sync && sync && echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null"
+
+### GNOME START
+alias gnome-session-start="XDG_SESSION_TYPE=wayland dbus-run-session gnome-session &>/dev/null"
+### GNOME END
+
+### WAYDROID START
+alias waydroid_adb_connect="adb connect 192.168.240.112"
+alias waydroid_multi_windows="waydroid prop set persist.waydroid.multi_windows $@"
+### WAYDROID END
+
+### CREATE ZRAM START
+function _create_zram_ext4() {
+	size=$(free -b | grep Mem | awk '{print $2}')
+	zram=$(sudo zramctl --find --algorithm lz4 --size $size)
+	sudo mkfs.ext4 -m 0 $zram
+	sudo tune2fs $zram -o discard,journal_data_writeback,nobarrier
+	sudo tune2fs $zram -O ^has_journal
+	sudo fsck.ext4 $zram -f
+}
+alias create_zram_ext4="_create_zram_ext4 $@"
+### CREATE ZRAM END

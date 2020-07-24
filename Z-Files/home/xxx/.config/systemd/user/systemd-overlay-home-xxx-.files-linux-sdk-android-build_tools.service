@@ -1,0 +1,11 @@
+[Unit]
+Description="Overlay directory /home/xxx/.scripts/mounts/overlay/home-xxx-.files-linux-sdk-android-build_tools"
+
+[Service]
+Type=simple
+ExecStart=/bin/sudo /home/xxx/.scripts/mounts/overlay/home-xxx-.files-linux-sdk-android-build_tools enable
+RemainAfterExit=true
+ExecStop=/bin/sudo /home/xxx/.scripts/mounts/overlay/home-xxx-.files-linux-sdk-android-build_tools disable
+
+[Install]
+WantedBy=default.target

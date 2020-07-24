@@ -1,0 +1,49 @@
+#! /bin/bash
+
+EMPTY_ARG='-'
+LOWERDIR=${1:-$EMPTY_ARG}
+UPPERDIR=${2:-$EMPTY_ARG}
+WORKDIR=${3:-$EMPTY_ARG}
+TARGET_DIR=${4:-$EMPTY_ARG}
+
+if [ $LOWERDIR = $EMPTY_ARG ]; then
+	echo "Please input LOWERDIR"
+	exit 1
+else
+	if [ ! -d $LOWERDIR ]; then
+		echo "No such directory $LOWERDIR"
+		exit 2
+	fi
+fi
+
+if [ $UPPERDIR = $EMPTY_ARG ]; then
+	echo "Please input UPPERDIR"
+	exit 1
+else
+	if [ ! -d $UPPERDIR ]; then
+		echo "No such directory $UPPERDIR"
+		exit 2
+	fi
+fi
+
+if [ $WORKDIR = $EMPTY_ARG ]; then
+	echo "Please input WORKDIR"
+	exit 1;
+else
+	if [ ! -d $WORKDIR ]; then
+		echo "No such directory $WORKDIR"
+		exit 2
+	fi
+fi
+
+if [ $TARGET_DIR = $EMPTY_ARG ]; then
+	echo "Please input WORKDIR"
+	exit 1;
+else
+	if [ ! -d $TARGET_DIR ]; then
+		echo "No such directory $TARGET_DIR"
+		exit 2
+	fi
+fi
+
+mount -t overlay none -o defaults,noatime,nodiratime,lowerdir=$LOWERDIR,upperdir=$UPPERDIR,workdir=$WORKDIR $TARGET_DIR

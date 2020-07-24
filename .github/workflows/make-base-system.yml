@@ -1,0 +1,39 @@
+name: Make Base System
+
+on:
+  push:
+    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+jobs:
+  running:
+    runs-on: ubuntu-latest
+    env:
+      ROOT_DIR: ${{ github.workspace }}/base-system
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Make base system bookworm
+        run: |
+          mkdir -p $ROOT_DIR
+          sudo mount -t tmpfs -o size=100% tmpfs $ROOT_DIR
+          sudo apt install debootstrap -y
+          sudo debootstrap --variant=minbase --arch amd64 bookworm $ROOT_DIR http://deb.debian.org/debian
+          sudo rm -rf $ROOT_DIR/var/cache/*
+          sudo rm -rf $ROOT_DIR/var/lib/apt/*
+          sudo rm -rf $ROOT_DIR/var/log/*
+          sudo rm -rf $ROOT_DIR/var/tmp/*
+          sudo rm -rf $ROOT_DIR/dev/*
+          sudo rm -rf $ROOT_DIR/run/*
+          sudo rm -rf $ROOT_DIR/root/*
+          sudo rm -rf $ROOT_DIR/tmp/*
+          cd $ROOT_DIR
+          sudo tar --use-compress-program='xz -9 -e -v' -cf ~/base-system.tar.xz *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: base-system
+          path: ~/base-system.tar.xz

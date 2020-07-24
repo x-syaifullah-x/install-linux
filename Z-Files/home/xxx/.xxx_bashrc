@@ -1,0 +1,131 @@
+#! /bin/bash
+
+export PATH="~/.local/bin":$PATH
+
+for i in /sys/class/rfkill/rfkill*; do
+    RFKILL_NAME=`cat $i/name`
+    if [ $RFKILL_NAME == "hci0" ]; then
+        echo 0 | sudo tee $i/soft &>/dev/null
+    fi
+done
+
+export PATH_LINUX_FILE="$HOME/.files/Linux"
+PATH_LINUX_FILE_IDE="$PATH_LINUX_FILE/IDE"
+PATH_LINUX_FILE_SDK="$PATH_LINUX_FILE/SDK"
+PATH_LINUX_FILE_TOOLS="$PATH_LINUX_FILE/Tools"
+
+# FLUTTER SDK CONFIGURATION
+#FLUTTER_ROOT="$PATH_LINUX_FILE_SDK/flutter"
+FLUTTER_ROOT="/run/user/$(id --user)/SDK/flutter"
+export PATH="$FLUTTER_ROOT/bin":$PATH
+
+# JAVA CONFIGURATION
+export JAVA_HOME="$PATH_LINUX_FILE_SDK/JVM/jbr"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$JAVA_HOME/lib"
+export PATH="$JAVA_HOME/bin":$PATH
+
+# ANDROID SDK CONFIGURATION
+export ANDROID_HOME="$PATH_LINUX_FILE_SDK/Android"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+# export PATH="$ANDROID_SDK_ROOT/platform-tools":$PATH
+# export PATH="$ANDROID_HOME/build-tools/33.0.0":$PATH
+# export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin":$PATH
+# export PATH="$ANDROID_SDK_ROOT/emulator":$PATH
+# export PATH="$ANDROID_SDK_ROOT/emulator/bin64":$PATH
+# export PATH="$ANDROID_SDK_ROOT/emulator/qemu/linux-x86_64":$PATH
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/platform-tools/lib64
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64/gles_mesa
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64/gles_swiftshader
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64/qt/lib
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64/vulkan
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_HOME/build-tools/31.0.0/lib64
+
+# CMAKE CONFIGURATION
+CMAKE_HOME="$ANDROID_SDK_ROOT/cmake/3.22.1"
+export PATH="$CMAKE_HOME/bin":$PATH
+
+# ANDROID STUDIO CONFIGURATION
+ANDROID_STUDIO_ROOT="$PATH_LINUX_FILE_IDE/android-studio"
+export PATH=$PATH:"$ANDROID_STUDIO_ROOT/bin"
+export STUDIO_VM_OPTIONS="/home/xxx/.android/studio/bin/studio64.vmoptions"
+export STUDIO_PROPERTIES="/home/xxx/.android/studio/bin/idea.properties"
+
+# VSCODE CONFIGURATION
+#VSCODE_ROOT="$PATH_LINUX_FILE_IDE/VSCode-linux-x64"
+#export PATH=$PATH:"$VSCODE_ROOT/bin"
+
+# GRADLE CONFIGURATION
+export GRADLE_USER_HOME="${HOME}/.gradle"
+export PATH=$PATH:$GRADLE_USER_HOME/wrapper/dists/gradle-8.2-all/6mxqtxovn2faat1idb7p6lxsa/gradle-8.2/bin
+
+# NODEJS CONFIGURATION
+NODE_JS_ROOT="$PATH_LINUX_FILE_SDK/node"
+export PATH=$PATH:"$NODE_JS_ROOT/bin"
+
+# FIREBASE-TOOLS CONFIGURATION
+FIREBASE_TOOLS_ROOT="$PATH_LINUX_FILE_TOOLS/firebase-tools"
+export PATH=$PATH:"$FIREBASE_TOOLS_ROOT/node_modules/.bin"
+ln -s $FIREBASE_TOOLS_ROOT/firebase $HOME/.cache 2>/dev/null
+
+SCRCPY_ROOT_DIR="${PATH_LINUX_FILE_TOOLS}/scrcpy"
+if [ -d $SCRCPY_ROOT_DIR ]; then
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$SCRCPY_ROOT_DIR/usr/local/lib/x86_64-linux-gnu"
+    export ADB=$ANDROID_HOME/platform-tools/adb
+    # ANDROID_SERIAL=
+    export SCRCPY_SERVER_PATH="$SCRCPY_ROOT_DIR/usr/local/share/scrcpy/scrcpy-server"
+    export SCRCPY_ICON_PATH="$SCRCPY_ROOT_DIR/usr/local/share/icons/hicolor/256x256/apps/scrcpy.png"
+   alias scrcpy-STB="$SCRCPY_ROOT_DIR/usr/local/bin/scrcpy --window-title=Android --window-y=0 --window-x=1366 --shortcut-mod lctrl $@"
+   alias scrcpy="$SCRCPY_ROOT_DIR/usr/local/bin/scrcpy --window-title=Android --stay-awake --window-y=0 --window-x=1366 --power-off-on-close --shortcut-mod lctrl"
+fi
+
+AUDIO_RELAY="${PATH_LINUX_FILE_TOOLS}/audio-relay"
+if [ -d $AUDIO_RELAY ]; then
+    alias audio-relay="${AUDIO_RELAY}/bin/AudioRelay"
+fi
+
+APFS_TOOLS="${PATH_LINUX_FILE_TOOLS}/apfs-tools"
+if [ -d $APFS_TOOLS ]; then
+    export PATH=$PATH:$APFS_TOOLS
+fi
+
+if [ -f ~/.xxx_alias ]; then
+    . ~/.xxx_alias
+fi
+
+BASH_COMPLETION_DIR=~/.config/bash-completion
+if [ -d $BASH_COMPLETION_DIR ]; then
+    names="$(ls -A $BASH_COMPLETION_DIR)"
+    for name in $names; do
+        if [ -f $BASH_COMPLETION_DIR/$name ]; then
+            source $BASH_COMPLETION_DIR/$name
+        fi
+    done
+fi
+
+# Add git branch if its present to PS1
+# if [ -x /usr/bin/git ]; then
+#     parse_git_branch() {
+#         git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\x1B[0;32m─( \x1B[1;35m\git::\1 \x1B[0;32m\)/'
+#     }
+# fi
+
+if [ "$XDG_SESSION_TYPE" != "tty" ]; then
+	### CHECK OVERLAY
+	! grep -qs "/boot overlay" /proc/mounts && echo "/boot not overlay"
+	! grep -qs "/etc overlay" /proc/mounts && echo "/etc not overlay"
+	! grep -qs "/home/xxx/.config/google-chrome overlay" /proc/mounts && echo "/home/xxx/.config/google-chrome not overlay"
+	! grep -qs "/home/xxx/.config/Code overlay" /proc/mounts && echo "/home/xxx/.config/Code not overlay"
+	! grep -qs "/home/xxx/.files/Linux/SDK/Android/build-tools overlay" /proc/mounts && echo "/home/xxx/.files/Linux/SDK/Android/build-tools not overlay"
+	! grep -qs "/home/xxx/.files/Linux/SDK/Android/platforms overlay" /proc/mounts && echo "/home/xxx/.files/Linux/SDK/Android/platforms not overlay"
+	! grep -qs "/home/xxx/.local/share overlay" /proc/mounts && echo "/home/xxx/.local/share not overlay"
+	! grep -qs "/opt overlay" /proc/mounts && echo "/opt not overlay"
+	! grep -qs "/srv overlay" /proc/mounts && echo "/srv not overlay"
+	! grep -qs "/usr overlay" /proc/mounts && echo "/usr not overlay"
+	! grep -qs "/var overlay" /proc/mounts && echo "/var not overlay"
+	###
+
+	### CHECK TMPFS
+	sudo ~/.scripts/mounts/tmpfs/mount check
+	###
+fi

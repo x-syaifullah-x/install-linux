@@ -1,0 +1,11 @@
+[Unit]
+Description="Overlay directory /boot, /etc, /opt, /srv, /usr, /var"
+
+[Service]
+Type=simple
+ExecStart=/bin/sudo /home/xxx/.scripts/mounts/overlay/boot,etc,opt,srv,usr,var enable
+RemainAfterExit=true
+ExecStop=/bin/sudo /home/xxx/.scripts/mounts/overlay/boot,etc,opt,srv,usr,var disable
+
+[Install]
+WantedBy=default.target

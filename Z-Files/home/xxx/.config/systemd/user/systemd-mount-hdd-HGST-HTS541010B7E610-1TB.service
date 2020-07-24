@@ -1,0 +1,11 @@
+[Unit]
+Description="Mount hdd HGST-HTS541010B7E610-1TB"
+
+[Service]
+Type=simple
+ExecStart=/bin/sudo /home/xxx/.scripts/mounts/mount-hdd-HGST-HTS541010B7E610-1TB enable
+RemainAfterExit=true
+ExecStop=/bin/sudo /home/xxx/.scripts/mounts/mount-hdd-HGST-HTS541010B7E610-1TB disable
+
+[Install]
+WantedBy=default.target

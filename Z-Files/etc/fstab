@@ -1,0 +1,21 @@
+# <file system>                                 <mount point>       <type>          <options>                                                                                            <dump>  <pass>
+# SYSTEM ROOT EXT4
+UUID=00000000-0000-0000-0000-000000000001      /                   ext4            defaults,noatime,nodiratime,errors=remount-ro,commit=1800                                               0       0
+
+# SYSTEM ROOT F2FS
+#UUID=00000000-0000-0000-0000-000000000001       /                   f2fs            defaults,noatime,nodiratime,fastboot			                                                        0       0
+
+# RAMFS OR TMPFS
+tmpfs                                           /dev/shm			tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=1777,nosuid,nodev								0       0
+tmpfs                                           /media				tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755												0       0
+tmpfs                                           /mnt				tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755												0       0
+tmpfs                                           /root				tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0700												0       0
+tmpfs                                           /run/lock			tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=1777,nosuid,nodev,noexec							0       0
+tmpfs                                           /tmp				tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=1777,nosuid,nodev								0       0
+tmpfs                                           /var/backups		tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755												0       0
+tmpfs                                           /var/cache			tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755												0       0
+tmpfs                                           /var/lib/apt		tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755												0       0
+tmpfs                                           /var/log			tmpfs           defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755												0       0
+
+# ZRAM
+/dev/zram0                                      none				swap            defaults,pri=100																						0       0

@@ -1,0 +1,11 @@
+[Unit]
+Description="Overlay directory /home/xxx/.gradle"
+
+[Service]
+Type=simple
+ExecStart=/bin/sudo /home/xxx/.scripts/mounts/overlay/home-xxx-.gradle enable
+RemainAfterExit=true
+ExecStop=/bin/sudo /home/xxx/.scripts/mounts/overlay/home-xxx-.gradle disable
+
+[Install]
+WantedBy=default.target

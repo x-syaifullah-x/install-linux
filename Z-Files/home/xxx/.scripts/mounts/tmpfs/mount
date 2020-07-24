@@ -1,0 +1,55 @@
+#! /bin/bash
+
+CURRENT_DIR=`dirname $0`
+#USER=$(last | sort | grep "still logged in" | awk '{print $1; exit}')
+USER=xxx
+
+if [ `id --user` != 0 ]; then
+ 	echo "must be superuser to use mount."
+	exit
+fi
+
+_mount() {
+    _MOUNT_PATH=$1
+    _MOUNT_UID_GID=$2
+	if ! grep -qs $_MOUNT_PATH /proc/mounts; then
+		# delete the contents of the folder if it is not empty
+		if [ -d $_MOUNT_PATH ]; then
+			for i in $(ls -A $_MOUNT_PATH); do
+				rm -rfv "$_MOUNT_PATH/$i"
+			done
+		else
+			mkdir -pv $_MOUNT_PATH
+			chown $USER:$USER $_MOUNT_PATH
+		fi
+		mount -t tmpfs none -o defaults,relatime,noatime,nodiratime,size=100%,uid=$USER,gid=$USER,nr_inodes=0,mode=0755,inode64 $_MOUNT_PATH
+      	# mount -t ramfs ramfs -o defaults,noatime,nodiratime $DIR
+      	# mount /dev/zram0 $DIR -o defaults,noatime,nodiratime
+	else
+		echo "Directory $_MOUNT_PATH is already mounted"
+	fi
+}
+
+properties="${CURRENT_DIR}/mount.properties"
+if [ -f "$properties" ]; then
+	while read -r _path; do
+		# check line is blank
+		if [ ! -z "$_path" ]; then
+			is_comment="${_path:0:1} != #"
+			if [ $is_comment ]; then
+				is_umount="${1:-0} = disable"
+				if [ $is_umount ]; then
+					umount -v --lazy --recursive $_path
+				elif [ "$1" = "check" ]; then
+					if ! grep -qs $_path /proc/mounts; then
+						echo "Directory $_path not mounted"
+					fi
+				else
+					_mount $_path
+				fi
+			fi
+		fi
+	done < "$properties"
+else
+  echo "$properties not found."
+fi

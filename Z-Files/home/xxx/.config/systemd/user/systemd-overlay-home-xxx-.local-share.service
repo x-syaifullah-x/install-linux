@@ -1,0 +1,11 @@
+[Unit]
+Description="Overlay directory /home/xxx/.local/share"
+
+[Service]
+Type=simple
+ExecStart=/bin/sudo /home/xxx/.scripts/mounts/overlay/home-xxx-.local-share enable
+RemainAfterExit=true
+ExecStop=/bin/sudo /home/xxx/.scripts/mounts/overlay/home-xxx-.local-share disable
+
+[Install]
+WantedBy=default.target

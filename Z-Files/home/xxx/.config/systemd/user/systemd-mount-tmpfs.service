@@ -1,0 +1,11 @@
+[Unit]
+Description="Umount tmpfs"
+
+[Service]
+Type=simple
+ExecStart=/bin/sudo /home/xxx/.scripts/mounts/tmpfs/mount
+RemainAfterExit=true
+ExecStop=/bin/sudo /home/xxx/.scripts/mounts/tmpfs/mount disable
+
+[Install]
+WantedBy=default.target

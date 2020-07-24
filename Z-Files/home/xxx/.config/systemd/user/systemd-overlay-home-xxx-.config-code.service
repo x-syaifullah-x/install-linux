@@ -1,0 +1,11 @@
+[Unit]
+Description="Overlay directory /home/xxx/.config/code"
+
+[Service]
+Type=simple
+ExecStart=/bin/sudo /home/xxx/.scripts/mounts/overlay/home-xxx-.config-code enable
+RemainAfterExit=true
+ExecStop=/bin/sudo /home/xxx/.scripts/mounts/overlay/home-xxx-.config-code disable
+
+[Install]
+WantedBy=default.target

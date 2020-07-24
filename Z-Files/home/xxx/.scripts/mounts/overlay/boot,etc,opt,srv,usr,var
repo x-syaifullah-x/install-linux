@@ -1,0 +1,122 @@
+#! /bin/bash
+
+OVERLAY_DIR="/tmp/overlay"
+UPPERDIR="$OVERLAY_DIR/upperdir"
+WORKDIR="$OVERLAY_DIR/workdir"
+
+if [ "$1" = "enable" ]; then
+    # Create upperdir directory if not exist
+    if [ ! -d "${UPPERDIR}" ]; then
+        mkdir -p "$UPPERDIR"
+    fi
+
+    # Create workdir directory if not exist
+    if [ ! -d "${WORKDIR}" ]; then
+        mkdir -p "$WORKDIR"
+    fi
+
+    COMMAND_OVERLAY_MOUNT=$(dirname $0)/_overlay-mount
+    if [ ! -f $COMMAND_OVERLAY_MOUNT ]; then
+        echo "Script ${COMMAND_OVERLAY_MOUNT} could not be found"
+        exit 2
+    fi
+
+    LOWERDIR=/var
+    mkdir -p $UPPERDIR$LOWERDIR
+    mkdir -p $WORKDIR$LOWERDIR
+    TARGETDIR=$LOWERDIR
+
+    mkdir -p $UPPERDIR/var/backups
+    mv /var/backups/* $UPPERDIR/var/backups 2>/dev/null
+	if grep -qs /var/backups /proc/mounts; then
+		umount /var/backups
+    fi
+
+    mkdir -p $UPPERDIR/var/cache
+    mv /var/cache/*  $UPPERDIR/var/cache 2>/dev/null
+	if grep -qs /var/cache /proc/mounts; then
+		umount /var/cache
+    fi
+
+    mkdir -p $UPPERDIR/var/lib/apt
+    mv /var/lib/apt/* $UPPERDIR/var/lib/apt 2>/dev/null
+	if grep -qs /var/lib/apt /proc/mounts; then
+		umount /var/lib/apt
+    fi
+
+    mkdir -p $UPPERDIR/var/log
+    mv /var/log/* $UPPERDIR/var/log 2>/dev/null
+    if grep -qs /var/log /proc/mounts; then
+        umount /var/log
+    fi
+
+    if ! grep -qs "$LOWERDIR overlay" /proc/mounts; then
+        $COMMAND_OVERLAY_MOUNT $LOWERDIR $UPPERDIR$LOWERDIR $WORKDIR$LOWERDIR $TARGETDIR
+    fi
+
+
+    LOWERDIR=/boot
+    mkdir -p $UPPERDIR$LOWERDIR
+    mkdir -p $WORKDIR$LOWERDIR
+    TARGETDIR=$LOWERDIR
+    if ! grep -qs "$LOWERDIR overlay" /proc/mounts; then
+        $COMMAND_OVERLAY_MOUNT $LOWERDIR $UPPERDIR$LOWERDIR $WORKDIR$LOWERDIR $TARGETDIR
+    fi
+
+    LOWERDIR=/etc
+    mkdir -p $UPPERDIR$LOWERDIR
+    mkdir -p $WORKDIR$LOWERDIR
+    TARGETDIR=$LOWERDIR
+    if ! grep -qs "$LOWERDIR overlay" /proc/mounts; then
+        $COMMAND_OVERLAY_MOUNT $LOWERDIR $UPPERDIR$LOWERDIR $WORKDIR$LOWERDIR $TARGETDIR
+    fi
+
+    LOWERDIR=/opt
+    mkdir -p $UPPERDIR$LOWERDIR
+    mkdir -p $WORKDIR$LOWERDIR
+    TARGETDIR=$LOWERDIR
+    if ! grep -qs "$LOWERDIR overlay" /proc/mounts; then
+        $COMMAND_OVERLAY_MOUNT $LOWERDIR $UPPERDIR$LOWERDIR $WORKDIR$LOWERDIR $TARGETDIR
+    fi
+
+    LOWERDIR=/srv
+    mkdir -p $UPPERDIR$LOWERDIR
+    mkdir -p $WORKDIR$LOWERDIR
+    TARGETDIR=$LOWERDIR
+    if ! grep -qs "$LOWERDIR overlay" /proc/mounts; then
+        $COMMAND_OVERLAY_MOUNT $LOWERDIR $UPPERDIR$LOWERDIR $WORKDIR$LOWERDIR $TARGETDIR
+    fi
+
+    LOWERDIR=/usr
+    mkdir -p $UPPERDIR$LOWERDIR
+    mkdir -p $WORKDIR$LOWERDIR
+    TARGETDIR=$LOWERDIR
+    if ! grep -qs "$LOWERDIR overlay" /proc/mounts; then
+        $COMMAND_OVERLAY_MOUNT $LOWERDIR $UPPERDIR$LOWERDIR $WORKDIR$LOWERDIR $TARGETDIR
+    fi
+elif [ "$1" = "disable" ]; then
+    umount /boot --lazy --recursive 2>/dev/null
+
+    umount /etc --lazy --recursive 2>/dev/null
+
+    umount /opt --lazy --recursive 2>/dev/null
+
+    umount /srv --lazy --recursive 2>/dev/null
+
+    umount /var --lazy --recursive 2>/dev/null
+    mount -t tmpfs none -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755 /var/backups
+    mv $UPPERDIR/var/backups/* /var/backups 2>/dev/null
+
+    mount -t tmpfs none -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755 /var/cache
+    mv $UPPERDIR/var/cache/* /var/cache 2>/dev/null
+
+    mount -t tmpfs none -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755 /var/lib/apt
+    mv $UPPERDIR/var/lib/apt/* /var/lib/apt 2>/dev/null
+
+    mount -t tmpfs none -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755 /var/log
+    mv $UPPERDIR/var/log/* /var/log 2>/dev/null
+
+    umount /usr --lazy --recursive 2>/dev/null
+else
+    echo "Required args [ enable | disable ]"
+fi

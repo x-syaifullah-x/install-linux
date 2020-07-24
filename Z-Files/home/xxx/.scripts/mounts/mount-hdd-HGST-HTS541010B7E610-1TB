@@ -1,0 +1,25 @@
+#! /bin/bash
+
+[ `id --user` != 0 ] && echo "Must be superuser to use mount." && exit
+#_USER=$(last | sort | grep "still logged in" | awk '{print $1; exit}')
+_USER=xxx
+_LABEL_HGST_HTS541010B7=HDD-0
+_PATH_HGST_HTS541010B7=/media/$_USER/$_LABEL_HGST_HTS541010B7
+
+if [ "$1" = "enable" ]; then
+	if ! grep -qs $_PATH_HGST_HTS541010B7 /proc/mounts; then
+		mount LABEL=$_LABEL_HGST_HTS541010B7 -o uid=$_USER,gid=$_USER $_PATH_HGST_HTS541010B7 --mkdir &>/dev/null
+	fi
+elif [ "$1" = "disable" ]; then
+	for i in $(mount | grep "$_PATH_HGST_HTS541010B7" | awk '{print $3}'); do
+		if [ "$i" != "$_PATH_HGST_HTS541010B7" ]; then
+			umount $i --lazy --recursive &>/dev/null
+		fi
+	done
+	umount $_PATH_HGST_HTS541010B7 --lazy --recursive &>/dev/null
+	if [ -z "$(ls -A $_PATH_HGST_HTS541010B7)" ]; then
+		rm -rf $_PATH_HGST_HTS541010B7 &>/dev/null
+	fi
+else
+    echo "Required args [ enable | disable ]"
+fi

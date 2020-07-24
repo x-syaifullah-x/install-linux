@@ -1,0 +1,6 @@
+update_config=1
+network={
+	ssid="MI 8"
+	#psk="123sampai100"
+	psk=cc74afad347f179c1180b1a0c4dfa7c2c9ca79416526645a85717db5ced4f9cc
+}

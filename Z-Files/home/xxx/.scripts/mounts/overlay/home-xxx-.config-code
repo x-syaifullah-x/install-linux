@@ -1,0 +1,21 @@
+#! /bin/bash
+
+#USER=$(last | sort | grep "still logged in" | awk '{print $1; exit}')
+USER=xxx
+TARGET_DIR="/home/$USER/.config/Code"
+if [ "$1" = "enable" ]; then
+    OVERLAY_DIR="/tmp/overlay"
+    LOWER_DIR="$TARGET_DIR"
+    UPPER_DIR="$OVERLAY_DIR/upperdir$TARGET_DIR"
+    WORK_DIR="$OVERLAY_DIR/workdir$TARGET_DIR"
+    mkdir -p $OVERLAY_DIR $LOWER_DIR $UPPER_DIR $WORK_DIR
+    chown -R $USER:$USER $UPPER_DIR
+    if ! grep -qs "$LOWER_DIR overlay" /proc/mounts; then
+        COMMAND_OVERLAY_MOUNT=$(dirname $0)/_overlay-mount
+        $COMMAND_OVERLAY_MOUNT $LOWER_DIR $UPPER_DIR $WORK_DIR $TARGET_DIR
+    fi
+elif [ "$1" = "disable" ]; then
+    umount $TARGET_DIR --lazy --recursive &>/dev/null
+else
+    echo "Required args [ enable | disable ]"
+fi

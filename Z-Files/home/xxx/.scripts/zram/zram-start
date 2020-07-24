@@ -1,0 +1,16 @@
+#! /bin/sh
+PROPERTIES_FILE="$(dirname $0)/zram.properties"
+[ -f $PROPERTIES_FILE ] && . $PROPERTIES_FILE
+
+sysctl -w vm.swappiness=${SWAPPINESS:-10}
+sysctl -p
+
+modprobe zram num_devices=${NUM_DEVICES:-1}
+
+COUNT=`expr ${NUM_DEVICES:-1} - 1`
+for i in `seq 0 $COUNT`; do
+    echo ${COMP_ALGORITHM:-zstd} > /sys/block/zram$i/comp_algorithm
+    echo ${DISK_SIZE:-1024M} > /sys/block/zram$i/disksize
+    mkswap /dev/zram$i
+    swapon -p ${PRIORITY:-75} /dev/zram$i
+done

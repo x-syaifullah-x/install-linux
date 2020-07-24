@@ -1,0 +1,5 @@
+network={
+	ssid="Wi-Fi"
+	#psk="3172041902920013"
+	psk=f8f9fd28fc6eae7397a6ba97e52f097c16b0870800787bb0d698a39b20c8facf
+}
