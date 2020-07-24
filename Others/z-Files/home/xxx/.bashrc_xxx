@@ -1,0 +1,113 @@
+#! /bin/bash
+
+export PATH=$PATH:"${HOME}/.local/bin"
+
+PATH_LINUX_FILE="${HOME}/.files/Linux"
+PATH_LINUX_FILE_IDE="$PATH_LINUX_FILE/IDE"
+PATH_LINUX_FILE_SDK="$PATH_LINUX_FILE/SDK"
+PATH_LINUX_FILE_TOOLS="$PATH_LINUX_FILE/Tools"
+
+# FLUTTER SDK CONFIGURATION
+FLUTTER_ROOT="$PATH_LINUX_FILE/SDK/Flutter/flutter"
+export PATH=$PATH:$FLUTTER_ROOT/bin
+unset FLUTTER_ROOT
+
+# JAVA CONFIGURATION
+export JAVA_HOME="$PATH_LINUX_FILE_SDK/Java"
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$JAVA_HOME/lib
+export PATH=$PATH:$JAVA_HOME/bin
+
+# ANDROID SDK CONFIGURATION
+export ANDROID_HOME="$PATH_LINUX_FILE_SDK/Android"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+# export PATH="$ANDROID_SDK_ROOT/platform-tools":$PATH
+# export PATH="$ANDROID_HOME/build-tools/33.0.0":$PATH
+# export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin":$PATH
+# export PATH="$ANDROID_SDK_ROOT/emulator":$PATH
+# export PATH="$ANDROID_SDK_ROOT/emulator/bin64":$PATH
+# export PATH="$ANDROID_SDK_ROOT/emulator/qemu/linux-x86_64":$PATH
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/platform-tools/lib64
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64/gles_mesa
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64/gles_swiftshader
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64/qt/lib
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_SDK_ROOT/emulator/lib64/vulkan
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ANDROID_HOME/build-tools/31.0.0/lib64
+
+# CMAKE CONFIGURATION
+CMAKE_HOME="$ANDROID_SDK_ROOT/cmake/3.22.1"
+export PATH=$PATH:$CMAKE_HOME/bin
+unset CMAKE_HOME
+
+# ANDROID STUDIO CONFIGURATION
+ANDROID_STUDIO_ROOT="$PATH_LINUX_FILE_IDE/android-studio"
+export STUDIO_VM_OPTIONS="${HOME}/.android/studio/bin/studio64.vmoptions"
+export STUDIO_PROPERTIES="${HOME}/.android/studio/bin/idea.properties"
+export PATH=$PATH:$ANDROID_STUDIO_ROOT/bin
+unset ANDROID_STUDIO_ROOT
+
+# GRADLE CONFIGURATION
+export GRADLE_USER_HOME="${HOME}/.gradle"
+GRADLE_ROOT="$GRADLE_USER_HOME/wrapper/dists/gradle-8.8-all/6gdy1pgp427xkqcjbxw3ylt6h/gradle-8.8"
+export PATH=$PATH:$GRADLE_ROOT/bin
+unset GRADLE_ROOT
+unset GRADLE_USER_HOME
+
+# NODEJS CONFIGURATION
+NODE_JS_ROOT="$PATH_LINUX_FILE_SDK/Node"
+export PATH=$PATH:$NODE_JS_ROOT/bin
+unset NODE_JS_ROOT
+
+# FIREBASE-TOOLS CONFIGURATION
+FIREBASE_TOOLS_ROOT="$PATH_LINUX_FILE_TOOLS/FirebaseTools"
+[ ! -L $HOME/.cache/firebase ] && ln -s $FIREBASE_TOOLS_ROOT/firebase $HOME/.cache 2>/dev/null
+export PATH=$PATH:$FIREBASE_TOOLS_ROOT/node_modules/.bin
+unset FIREBASE_TOOLS_ROOT
+
+SCRCPY_ROOT_DIR="${PATH_LINUX_FILE_TOOLS}/Scrcpy"
+if [ -d $SCRCPY_ROOT_DIR ]; then
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$SCRCPY_ROOT_DIR/usr/local/lib/x86_64-linux-gnu"
+    export ADB=$ANDROID_HOME/platform-tools/adb
+    # ANDROID_SERIAL=
+    export SCRCPY_SERVER_PATH="$SCRCPY_ROOT_DIR/usr/local/share/scrcpy/scrcpy-server"
+    export SCRCPY_ICON_PATH="$SCRCPY_ROOT_DIR/usr/local/share/icons/hicolor/256x256/apps/scrcpy.png"
+	alias scrcpy-STB="$SCRCPY_ROOT_DIR/usr/local/bin/scrcpy --window-title=Android --window-y=0 --window-x=1366 --shortcut-mod lctrl $@"
+	alias scrcpy="$SCRCPY_ROOT_DIR/usr/local/bin/scrcpy --window-title=Android --stay-awake --window-y=0 --window-x=1366 --power-off-on-close --shortcut-mod lctrl $@"
+fi
+unset SCRCPY_ROOT_DIR
+
+AUDIO_RELAY="${PATH_LINUX_FILE_TOOLS}/AudioRelay"
+if [ -d $AUDIO_RELAY ]; then
+    alias audio-relay="${AUDIO_RELAY}/bin/AudioRelay"
+fi
+unset AUDIO_RELAY
+
+APFS_TOOLS="${PATH_LINUX_FILE_TOOLS}/ApfsTools"
+export PATH=$PATH:$APFS_TOOLS/bin
+unset APFS_TOOLS
+
+# SETUP ALIAS
+BASHRC_XXX_ALIAS=${HOME}/.bashrc_xxx_alias
+if [ -f $BASHRC_XXX_ALIAS ]; then
+    . $BASHRC_XXX_ALIAS
+fi
+unset $BASHRC_XXX_ALIAS
+
+# CHECK MOUNT POINTS START
+if [ "$XDG_SESSION_TYPE" != "tty" ]; then
+	"/sbin/mount-system-overlay" check
+	"/sbin/mount-user-dir" check
+fi
+# CHECK MOUNT POINTS END
+
+# Add git branch if its present to PS1
+# if [ -x /usr/bin/git ]; then
+#     parse_git_branch() {
+#         git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\x1B[0;32m─( \x1B[1;35m\git::\1 \x1B[0;32m\)/'
+#     }
+# fi
+
+unset PATH_LINUX_FILE_IDE
+unset PATH_LINUX_FILE_SDK
+unset PATH_LINUX_FILE_TOOLS
+unset PATH_LINUX_FILE
