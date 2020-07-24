@@ -1,0 +1,143 @@
+#! /bin/bash
+
+#alias libreoffice='libreoffice7.3 -env:UserInstallation=file:////tmp/libreoffice'
+
+### VNCSERVER START
+# alias vncserver_for_mi_8_start="vncserver :0 -name xxx@Lonovo-B490 -geometry 710x820 -dpi 105"
+# alias vncserver_for_mi_8_stop="vncserver -kill :0"
+### VNCSERVER END
+
+### APT START
+alias apt_purge="sudo apt purge $(dpkg -l | awk '/^rc/ { print $2 }')"
+### APT AND
+
+### BATTERY STATE START
+alias battery_stat="upower              -i /org/freedesktop/UPower/devices/battery_BAT0"
+alias battery_stat_watch="watch upower  -i /org/freedesktop/UPower/devices/battery_BAT0"
+### BATTERY STATE END
+
+### POWER PROFILE START
+alias power_profile_performance="echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2> /dev/null"
+alias power_profile_powersave="echo powersave     | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2> /dev/null"
+alias power_profile_schedutil="echo schedutil     | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2> /dev/null"
+### POWER PROFILE END
+
+### SET ONLINE CPU START
+function _set_online_cpu() {
+  _ARG_1=$(expr ${1:-0} - 1)
+  _INDEX=0
+  for i in /sys/devices/system/cpu/cpu*/online; do
+    if [ $_INDEX -lt $_ARG_1 ]; then
+      echo 1 | sudo tee $i 2>/dev/null
+    else
+      echo 0 | sudo tee $i 2>/dev/null
+    fi
+    _INDEX=$(expr $_INDEX + 1)
+  done
+  unset _INDEX
+  unset _ARG_1
+}
+alias set_online_cpu="_set_online_cpu $@"
+### SET ONLINE CPU END
+
+alias cpu_MHz_watch="watch -d -n1 'grep MHz /proc/cpuinfo'"
+
+alias temperature="cat              /sys/class/thermal/thermal_zone*/temp"
+alias temperature_watch="watch cat  /sys/class/thermal/thermal_zone*/temp"
+
+# alias clear_zsh="printf '\033c'"
+
+#alias tmux_clear='clear && tmux clear'
+
+# with gpu nvidia = -gpu swiftshader_indirect
+# alias eun_avd="QT_QPA_PLATFORM=xcb $ANDROID_SDK_ROOT/emulator/emulator @TV_API_29 -nocache -no-boot-anim -no-snapshot -no-snapshot-load -no-snapshot-save -accel on -lowram -gpu host -data /mnt/zram-1/data.img -cache /mnt/zram-1/cache.img -datadir /mnt/zram-1 -qemu -cpu host,kvm=on -smp $(nproc) -m $(expr 1024 \* 1)"
+
+#alias vim="vim -i /tmp/.viminfo"
+
+alias adb="$ANDROID_HOME/platform-tools/adb"
+alias fastboot="sudo ${ANDROID_HOME}/platform-tools/fastboot"
+
+alias clear_ram="sudo sync && sync && echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null"
+
+### WAYDROID START
+alias waydroid_adb_connect="adb connect 192.168.240.112"
+alias waydroid_multi_windows="waydroid prop set persist.waydroid.multi_windows $@"
+### WAYDROID END
+
+### CREATE ZRAM START
+function _create_zram() {
+  size=$(free -b | grep Mem | awk '{print $2}')
+  sudo modprobe zram --verbose
+  zram_path=$(sudo zramctl --find --algorithm lz4 --size $size)
+  zram_label=$(echo $zram_path | sed 's/\/dev\/zram/zram\-/g')
+}
+### CREATE ZRAM END
+
+### CREATE ZRAM EXT4 START
+function _create_zram_ext4() {
+  _create_zram
+  sudo mkfs.ext4 -m 0 -L $zram_label $zram_path
+  sudo tune2fs $zram_path -o discard,journal_data_writeback,nobarrier
+  sudo tune2fs $zram_path -O ^has_journal
+  sudo fsck.ext4 $zram_path -f
+  unset zram_path
+  unset size
+  unset zram_label
+}
+alias create_zram_ext4="_create_zram_ext4 $@"
+### CREATE ZRAM EXT4 END
+
+### CREATE ZRAM SWAP START
+function _create_zram_swap() {
+  _create_zram
+  sudo mkswap $zram_path --label $zram_label
+  sudo swapon $zram_path -p 100 -v
+  unset zram_path
+  unset size
+  unset zram_label
+  sudo sysctl -w vm.swappiness=1
+  sudo sysctl -p
+}
+alias create_zram_swap="_create_zram_swap $@"
+### CREATE ZRAM SWAP END
+
+# FOR FIX BLUEZ START
+function _rfkill_hci0() {
+  for i in /sys/class/rfkill/rfkill*; do
+    RFKILL_NAME=`cat $i/name`
+    if [ $RFKILL_NAME == "hci0" ]; then
+      echo 0 | sudo tee $i/soft &>/dev/null
+    fi
+  done
+  unset i
+  unset RFKILL_NAME
+}
+alias rfkill_hci0="_rfkill_hci0 $@"
+# FOR FIX BLUEZ END
+
+# SOURCES LIST UPDATE START
+function _sources_list_update() {
+  [ $(echo $USER) != root ] && echo "Required root access" && exit
+
+  _root_system="/media/xxx/HGST-EXT4/RootSystem"
+
+  _var_lib_apt="/var/lib/apt"
+  rm -rfv $_var_lib_apt
+  ln -sfv "$_root_system${_var_lib_apt}" "${_var_lib_apt}"
+  unset _var_lib_apt
+
+  unset _root_system
+
+  sed -i 's/#deb/deb/g' /etc/apt/sources.list
+  apt update
+}
+alias sources.list.update="sudo bash -c '$(declare -f _sources_list_update); _sources_list_update $@'"
+# SOURCES LIST UPDATE END
+
+alias google-chrome="google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland $@"
+alias google-chrome-stable="google-chrome $@"
+
+alias chromium="chromium --enable-features=UseOzonePlatform --ozone-platform=wayland $@"
+
+alias dynamic_workspaces_enable="gsettings set org.gnome.mutter dynamic-workspaces true"
+alias dynamic_workspaces_disable="gsettings set org.gnome.mutter dynamic-workspaces false"

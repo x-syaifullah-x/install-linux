@@ -1,0 +1,21 @@
+#! /bin/bash
+
+#printf '\n'
+
+#xrandr --output LVDS-1 --brightness 1
+
+# set brightness if its value is less than max brightness
+# INTEL_BACKLIGHT_DIR=/sys/class/backlight/intel_backlight
+# BRIGHTNESS_FILE=${INTEL_BACKLIGHT_DIR}/brightness
+# if [ -f  $BRIGHTNESS_FILE ]; then
+# 	MAX_BRIGHTNESS=$(cat ${INTEL_BACKLIGHT_DIR}/max_brightness 2>/dev/null)
+# 	if [ $(cat $BRIGHTNESS_FILE) -lt $MAX_BRIGHTNESS ]; then
+# 		echo $MAX_BRIGHTNESS | sudo tee $BRIGHTNESS_FILE &>/dev/null
+# 	fi
+# fi
+
+FILE_BASHRC=~/.bashrc
+if [ -f $FILE_BASHRC ]; then
+	. $FILE_BASHRC
+fi
+unset FILE_BASHRC

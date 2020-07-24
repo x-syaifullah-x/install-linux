@@ -1,0 +1,124 @@
+name: Make Rootfs Base System Debian 12
+
+on:
+  push:
+    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+jobs:
+  running:
+    runs-on: ubuntu-latest
+    env:
+      ROOT_DIR: ${{ github.workspace }}/rootfs
+      ARCH: amd64
+      CODENAME: bookworm
+    steps:
+      - name: CHECKOUT
+        uses: actions/checkout@v3
+      - name: SETUP DEBOOTSTRAP
+        run: |
+          sudo apt install debootstrap -y
+          export INCLUDE_FIX_ERROR=apt-utils,bash-completion,locales,whiptail
+          export INCLUDE=$INCLUDE_FIX_ERROR
+          sudo debootstrap --variant=minbase --arch $ARCH --include=$INCLUDE $CODENAME $ROOT_DIR http://deb.debian.org/debian
+      - name: CLEAN UP USELESS FOLDERS
+        run: |
+          sudo rm -rfv $ROOT_DIR/dev/*
+          sudo rm -rfv $ROOT_DIR/root/{.bashrc,.profile}
+          sudo rm -rfv $ROOT_DIR/run/*
+          sudo rm -rfv $ROOT_DIR/var/cache/*
+          sudo rm -rfv $ROOT_DIR/var/lib/apt/*
+          sudo rm -rfv $ROOT_DIR/var/log/*
+      - name: SETUP LINKED DIRECTORY
+        run: |
+          sudo rm -rf $ROOT_DIR/var/tmp
+          sudo ln -sf /tmp $ROOT_DIR/var/
+      - name: UPDATE HOSTNAME
+        run: |
+          cat << "EOF" | sudo tee $ROOT_DIR/etc/hostname &>/dev/null
+          localhost
+          EOF
+      - name: UPDATE HOSTS
+        run: |
+          cat << "EOF" | sudo tee $ROOT_DIR/etc/hosts &>/dev/null
+          127.0.0.1       localhost
+          ::1             localhost ip6-localhost ip6-loopback
+          fe00::0         ip6-localnet
+          ff00::0         ip6-mcastprefix
+          ff02::1         ip6-allnodes
+          ff02::2         ip6-allrouters
+          EOF
+      - name: UPDATE RESOLV CONF
+        run: |
+          cat << "EOF" | sudo tee $ROOT_DIR/etc/resolv.conf &>/dev/null
+          nameserver 8.8.8.8
+          nameserver 8.8.4.4
+          EOF
+      - name: UPDATE SOURCE LIST
+        run: |
+          cat << "EOF" | sudo tee $ROOT_DIR/etc/apt/sources.list &>/dev/null
+          # LOCAL
+          deb [trusted=yes] file:/media/xxx/HGST-EXT4/DEB/minimal ./deb/
+
+          # MAIN
+          deb http://deb.debian.org/debian/ bookworm main non-free-firmware
+          deb-src http://deb.debian.org/debian/ bookworm main non-free-firmware
+
+          # SECURITY
+          deb http://security.debian.org/debian-security bookworm-security main non-free-firmware
+          deb-src http://security.debian.org/debian-security bookworm-security main non-free-firmware
+
+          # UPDATES
+          deb http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
+          deb-src http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
+          EOF
+      - name: SETUP MOUNT POINT
+        run: |
+          sudo mount --bind /dev		  $ROOT_DIR/dev
+          sudo mount --bind /dev/pts	$ROOT_DIR/dev/pts
+          sudo mount --bind /proc		  $ROOT_DIR/proc
+          sudo mount --bind /sys		  $ROOT_DIR/sys
+          sudo mount -t tmpfs tmpfs   $ROOT_DIR/root			    -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0700
+          sudo mount -t tmpfs tmpfs   $ROOT_DIR/run 			    -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0775
+          sudo mount -t tmpfs tmpfs   $ROOT_DIR/tmp			      -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=1777,nosuid,nodev
+          sudo mount -t tmpfs tmpfs   $ROOT_DIR/var/backups	  -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755
+          sudo mount -t tmpfs tmpfs   $ROOT_DIR/var/cache		  -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755
+          sudo mount -t tmpfs tmpfs   $ROOT_DIR/var/lib/apt	  -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755
+          sudo mount -t tmpfs tmpfs   $ROOT_DIR/var/log		    -o defaults,noatime,nodiratime,size=100%,nr_inodes=0,mode=0755
+      - name: RUNNING CHROOT NON INTERACTIVE
+        run: |
+          sudo chroot $ROOT_DIR /bin/bash <<"EOT"
+          # SETUP LOCALES
+          sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+          dpkg-reconfigure --frontend=noninteractive locales
+          update-locale LANG=en_US.UTF-8
+          # SETUP TIMEZONE
+          ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
+          dpkg-reconfigure --frontend noninteractive tzdata
+          # REINSTALL ALL PACKAGE
+          apt update
+          package_name=$(dpkg --get-selections | grep -v deinstall | awk '{print $1}')
+          apt install --no-install-recommends --no-install-suggests --reinstall $package_name -y
+          EOT
+      - name: UMOUNT
+        run: |
+          sudo umount $ROOT_DIR/dev/pts
+          sudo umount $ROOT_DIR/dev
+          sudo umount $ROOT_DIR/proc
+          sudo umount $ROOT_DIR/sys
+          sudo umount $ROOT_DIR/root
+          sudo umount $ROOT_DIR/run
+          sudo umount $ROOT_DIR/tmp
+          sudo umount $ROOT_DIR/var/backups
+          sudo umount $ROOT_DIR/var/cache
+          sudo umount $ROOT_DIR/var/lib/apt
+          sudo umount $ROOT_DIR/var/log
+      - name: CREATE ARTIFACT
+        run: |
+          cd $ROOT_DIR && sudo tar --use-compress-program='xz -9 -e -v' -cf ~/rootfs-base-system.tar.xz *
+      - name: UPLOAD ARTIFACT
+        uses: actions/upload-artifact@v3
+        with:
+          name: rootfs-base-system
+          path: ~/rootfs-base-system.tar.xz
