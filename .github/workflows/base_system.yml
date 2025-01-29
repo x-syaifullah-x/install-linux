@@ -47,7 +47,7 @@ jobs:
           docker exec $container_name apt-get upgrade --no-install-suggests --no-install-recommends -y 2>&1 >/dev/null
           docker exec $container_name apt-get install --no-install-suggests --no-install-recommends apt-utils debootstrap -y 2>&1 >/dev/null
           export INCLUDE_PACKAGE="apt-utils,bash-completion,whiptail"
-          export EXCLUDE_PACKAGE="e2fsprogs,sysvinit-utils,util-linux-extra"
+          export EXCLUDE_PACKAGE="e2fsprogs,sysvinit-utils,init-system-helpers"
           docker exec $container_name debootstrap --variant=minbase --arch $ARCH --exclude=$EXCLUDE_PACKAGE --include=$INCLUDE_PACKAGE $CODENAME /$ROOTFS_DIR_NAME http://deb.debian.org/debian
 
       - name: CLEAN UP ROOTFS
